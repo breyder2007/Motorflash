@@ -1,79 +1,101 @@
-Explicación del código  
+Scraper de Coches de Segunda Mano - Motorflash
+Este repositorio contiene un script Python diseñado para extraer información detallada de coches de segunda mano de concesionarios específicos en la plataforma Motorflash. El programa recopila datos como URL, título, precio, detalles y enlaces a imágenes, para luego organizar esta información en formatos CSV y JSON, y descargar las imágenes en un archivo ZIP.
 
-Antes de ejecutar el código, necesitas tener instalado estas librerías:
- pip install beautifulsoup4
+🚀 Características Principales
+Extracción de Datos Completa: Recopila URL, título, precio, detalles y enlaces de imágenes de cada vehículo.
+
+Manejo de Paginación: Navega automáticamente a través de múltiples páginas de listados de coches.
+
+Extracción Robusta de Precios: Incluye lógica avanzada para identificar y extraer precios, incluso si su ubicación en el HTML varía ligeramente.
+
+Guardado de Datos Versátil: Exporta la información extraída a archivos .csv (para hojas de cálculo) y .json (para uso programático).
+
+Descarga y Organización de Imágenes: Descarga todas las imágenes de los vehículos y las organiza en carpetas individuales por coche, comprimiéndolas finalmente en un archivo .zip.
+
+Modo de Ejecución Visible/Invisible (Headless): Permite ver el navegador en acción durante el scraping para depuración (headless=False) o ejecutarlo en segundo plano (headless=True).
+
+🛠️ Requisitos Previos
+Antes de ejecutar el script, asegúrate de tener instalado lo siguiente en tu sistema:
+
+Python 3.x: Puedes descargarlo desde python.org. Durante la instalación en Windows, asegúrate de marcar la opción "Add Python to PATH".
+
+📦 Instalación de Dependencias
+El script requiere varias librerías de Python. Puedes instalarlas fácilmente usando pip.
+
+Abre tu terminal o línea de comandos.
+
+Navega hasta el directorio donde has guardado el archivo del script (por ejemplo, cd C:\Users\TuUsuario\MisProyectos\ScraperMotorflash).
+
+Ejecuta los siguientes comandos para instalar las librerías necesarias:
+
+pip install beautifulsoup4
 pip install playwright
 pip install requests
- pip install Pillow
-playwright install   
+pip install Pillow
 
- MOTORFLASH_BASE_URL = "https://www.motorflash.com/concesionario/grupo-cobendai/coches-segunda-mano/204237/"
-MOTORFLASH_BASE_URL: Esta es la dirección web (URL) de donde el script empezará a extraer la información. Este script sirve para cualquier link que sea para motorflash. 
+Importante: Playwright necesita descargar los navegadores que utilizará. Ejecuta este comando después de instalar playwright:
 
-with sync_playwright() as p: Esto inicia Playwright. Piensa en ello como si abrieras un navegador web invisible (o visible, si headless=False).
+playwright install
 
-browser = p.chromium.launch(headless=False): Lanza el navegador Chrome.
+⚙️ Configuración
+El script está diseñado para ser flexible con los enlaces de Motorflash.
 
-headless=False: Esto es importante para entender. Si lo pones en True, el navegador se ejecutará en segundo plano, sin que lo veas. Si lo pones en False (como está ahora), verás una ventana de Chrome abriéndose y navegando por la página. Esto es genial para depurar y ver qué está haciendo el script.
-    
-wait_until="networkidle": Espera hasta que la red esté "inactiva", lo que significa que la página y sus recursos (imágenes, scripts) se han cargado. Esto es crucial para evitar errores.
-time.sleep(random.uniform(5, 10)): Hace que el script espere un tiempo aleatorio entre 5 y 10 segundos. Esto es para parecerse más a un humano navegando y evitar que la página nos bloquee por hacer peticiones demasiado rápido.
-all_vehicle_locators = page.locator(vehicle_card_selector): Encuentra todas las tarjetas de coche en la página actual.
+URL Base del Concesionario:
+Abre el archivo de tu script (.py) en un editor de texto. Al principio del archivo, encontrarás la variable MOTORFLASH_BASE_URL:
 
-URL:
- card_locator.locator('p.h2-style a').get_attribute('href') busca el enlace dentro del título.
+MOTORFLASH_BASE_URL = "https://www.motorflash.com/concesionario/grupo-cobendai/coches-segunda-mano/204237/"
 
-Título:
- title_locator.text_content().strip() obtiene el texto del título.
+Para usarlo con otro concesionario de Motorflash: Simplemente cambia esta URL por la URL del listado de coches de segunda mano del concesionario que te interese en Motorflash. Por ejemplo:
 
-Precio:
-Primero, intenta encontrar un <span> con la clase price.
-Si no lo encuentra, o el texto no parece un precio, busca un <span> con la clase price dentro de un <div> con la clase price-box.
-Si aún no encuentra el precio, usa una "expresión regular" (re.search(r'\d{1,3}(?:\.\d{3})*(?:,\d+)?\s*€', text_content)) para buscar cualquier texto que se parezca a un número con puntos, comas y el símbolo "€" en cualquier <span> o <p> dentro de la tarjeta del coche. Esto lo hace muy robusto.
+MOTORFLASH_BASE_URL = "https://www.motorflash.com/concesionario/deysa-ford-ribera-del-loira/coches-segunda-mano/200293/"
 
-Descripción:
-Busca los detalles en las listas (<ul>) con las clases general y extras
+Nota: Este script está optimizado para la estructura HTML de motorflash.com. Si intentas usarlo con un dominio completamente diferente, es probable que necesites ajustar los selectores CSS dentro del código.
 
-Navegación a la Siguiente Página (a.nxtpage):
-next_button_locator = page.locator('a.nxtpage'): Busca el botón de "Siguiente página".
-if next_button_locator.is_enabled(): Comprueba si el botón está activo.
-next_button_locator.click(): Hace clic en el botón.
-page.wait_for_load_state('networkidle', ...): Espera a que la nueva página cargue.
-Función para Guardar Datos
-Esta función toma la lista de diccionarios con la información de los coches y la guarda en dos formatos:
-CSV (.csv): Un archivo de texto plano donde los datos están separados por comas. Ideal para abrir en Excel o programas de hojas de cálculo.
-csvwriter.writerow(['MARCA', 'MODELO', 'PRECIO', 'DETALLES', 'LINK']): Define los encabezados de las columnas.
-marca, modelo = 'N/A', 'N/A': Intenta separar la marca y el modelo del título del coche. Esto es una suposición basada en cómo se suelen estructurar los títulos. Podría necesitar ajustes si los títulos en otra web son muy diferentes.
-JSON (.json): Un formato de datos estructurado, muy común en programación. Es fácil de leer para las máquinas y también para los humanos (aunque menos que un CSV para grandes tablas).
-json.dump(car_data_list, jsonfile, ensure_ascii=False, indent=4): Guarda la lista de diccionarios como JSON, con formato legible (indent=4).
+Modo Headless (Opcional):
+Si deseas que el navegador se ejecute en segundo plano (sin abrir una ventana visible), cambia headless=False a headless=True en la línea browser = p.chromium.launch(headless=False).
 
-Funciones para Descargar y Comprimir Imágenes
+🚀 Cómo Ejecutar el Programa
+Una vez que hayas configurado la URL base y tengas todas las dependencias instaladas, puedes ejecutar el script:
 
-Esta función descarga una imagen de una URL y la convierte a JPG.
-requests.get(img_url, stream=True, timeout=10): Descarga la imagen. timeout=10 es importante para que no se quede esperando indefinidamente si una imagen no carga.
-Image.open(temp_path) as img: img.convert("RGB").save(jpg_path, "JPEG"): Usa la librería Pillow para abrir la imagen descargada (que podría estar en formato WEBP, PNG, etc.) y la guarda como JPG.
-Maneja errores de red y de procesamiento de imágenes.
-Esta función orquesta la descarga de todas las imágenes y la creación del ZIP.
-temp_dir = "temp_imagenes": Crea una carpeta temporal para guardar las imágenes antes de comprimirlas.
-sanitized_title = re.sub(r'[\\/:*?"<>|]', '_', titulo): Limpia el título del coche para que pueda usarse como nombre de carpeta (elimina caracteres que no están permitidos en los nombres de archivos).
-Para cada coche, crea una subcarpeta dentro de temp_imagenes con el nombre del coche.
-Llama a descargar_y_convertir_imagen para cada imagen del coche.
-with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:: Crea el archivo ZIP y añade todas las imágenes.
-finally:: Esta sección es crucial. Después de crear el ZIP, limpia la carpeta temporal (temp_imagenes) para no dejar archivos basura en tu sistema.
+Abre tu terminal o línea de comandos.
 
+Navega hasta el directorio donde guardaste tu script Python (el mismo lugar donde instalaste las dependencias).
 
-Qué Debes Hacer para que Funcione con cualquier link de motorflash
+Ejecuta el script usando el siguiente comando:
 
-Cambia la URL Base:
-Modifica la variable MOTORFLASH_BASE_URL al principio del script con la URL de la página que quieres scrapear.
-MOTORFLASH_BASE_URL = "https://www.la-nueva-web-de-coches.com/listado/" 
+python tu_script_principal.py
 
+(Reemplaza tu_script_principal.py con el nombre real de tu archivo, por ejemplo, scraper_coches.py).
 
-puede servir también 
+Límite de URLs (Opcional):
+Si quieres probar el script con un número limitado de coches (útil para pruebas rápidas), puedes modificar la variable url_limit_to_extract en la función main() de tu script. Por ejemplo, para extraer solo 10 coches:
 
-MOTORFLASH_BASE_URL = "https://www.motorflash.com/concesionario/deysa-ford-ribera-del-loira/coches-segunda-mano/200293/"  
+# En la función main():
+url_limit_to_extract = 10  # Establece un número (ej. 10) para limitar la extracción
 
+Si la dejas como None, el script intentará extraer todos los coches disponibles en la paginación.
 
-Donde utilice este código fue en el excel de “Salón del Vehículo de Ocasión de IFEMA” para sacar cada coche y marca
+📊 Output Esperado
+Al finalizar la ejecución del script, se generarán los siguientes archivos en el mismo directorio donde se ejecutó:
 
-Link:https://docs.google.com/spreadsheets/d/1LqS0QWpIj7C_XvmhVhoeuU_anclY1upAe6o7JwMGJGE/edit?usp=sharing
+coches_motorflash.csv: Un archivo CSV que contiene la marca, modelo, precio, detalles y el enlace (URL) de cada coche. Puedes abrirlo con programas de hoja de cálculo como Microsoft Excel, Google Sheets o LibreOffice Calc.
+
+coches_motorflash.json: Un archivo JSON con la misma información, pero en un formato estructurado, ideal para ser procesado por otros programas o APIs.
+
+imagenes_coches.zip: Un archivo comprimido que contiene todas las imágenes de los coches descargadas. Las imágenes se organizan en subcarpetas dentro del ZIP, con cada subcarpeta nombrada según el título del coche.
+
+Durante la ejecución, verás mensajes en la terminal que te informarán sobre el progreso (ej. "Iniciando la extracción...", "Processing page...", "Descargando imagen..."). Si headless=False, también observarás una ventana de navegador abriéndose y navegando por la web.
+
+🔗 Contexto de Uso: Salón del Vehículo de Ocasión de IFEMA
+Este código fue utilizado específicamente para extraer información de vehículos y marcas del "Salón del Vehículo de Ocasión de IFEMA", y los datos resultantes se integraron en la siguiente hoja de cálculo de Google Sheets:
+
+Link a la Hoja de Cálculo: Salón del Vehículo de Ocasión de IFEMA - Google Sheets
+
+Esto demuestra la capacidad del script para recopilar datos de listados de vehículos y su utilidad en la gestión y análisis de información de grandes eventos o concesionarios.
+
+⚠️ Notas Importantes
+Velocidad de Extracción: El script incluye pausas aleatorias (time.sleep) para simular el comportamiento humano y evitar ser bloqueado por el sitio web. No modifiques estas pausas a valores muy bajos, ya que podrías ser detectado como un bot.
+
+Cambios en la Web: Las estructuras de las páginas web pueden cambiar con el tiempo. Si el script deja de funcionar, es probable que los selectores CSS (div.item-listado, span.price, etc.) necesiten ser actualizados para coincidir con la nueva estructura de la página de Motorflash.
+
+Errores de Red/Imágenes: El script incluye manejo de errores básico para descargas de imágenes y problemas de red. Si una imagen no se descarga, se imprimirá un mensaje de error en la consola.
