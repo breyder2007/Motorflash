@@ -1,1 +1,5 @@
-
+pip install beautifulsoup4
+pip install playwright
+pip install requests
+ pip install Pillow
+playwright install
